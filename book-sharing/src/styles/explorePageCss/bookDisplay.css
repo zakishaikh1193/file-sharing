@@ -1,0 +1,596 @@
+/* 🌐 Bookx Container */
+.bookx-container {
+  display: flex;
+  gap: 28px;
+  padding: 32px 40px;
+  background: #f1f5f9; /* Light gray, consistent with dashboard */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #1e293b;
+  min-height: 100vh;
+  box-sizing: border-box;
+  align-items: flex-start;
+  justify-content: center;
+}
+ 
+/* 📌 Bookx Sidebar */
+.bookx-sidebar {
+  width: 280px;
+  background: #ffffff;
+  padding: 28px 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: fit-content; /* Fit content height */
+}
+ 
+.bookx-sidebar:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+ 
+.bookx-sidebar-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 28px;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  user-select: none;
+}
+ 
+/* 📂 Bookx Filter Group */
+.bookx-filter-group {
+  margin-bottom: 24px;
+}
+ 
+/* 📜 Bookx Filter Header */
+.bookx-filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 12px 0;
+  color: #1e293b;
+  border-bottom: 1px solid #e0e7ff; /* Light blue border */
+  user-select: none;
+  transition: color 0.2s ease;
+}
+ 
+.bookx-filter-header:hover {
+  color: #3b82f6; /* Light blue */
+}
+ 
+/* 📑 Bookx Options List */
+.bookx-options-list {
+  list-style: none;
+  padding-left: 8px;
+  margin: 12px 0 0 0;
+  max-height: 220px;
+  overflow-y: auto;
+  animation: fadeIn 0.3s ease forwards;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f8fafc; /* Light blue-gray scrollbar */
+}
+ 
+.bookx-options-list::-webkit-scrollbar {
+  width: 6px;
+}
+ 
+.bookx-options-list::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+ 
+.bookx-options-list::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+ 
+.bookx-options-list li {
+  margin-bottom: 10px;
+}
+ 
+.bookx-options-list label {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: #475569;
+  transition: color 0.2s ease;
+  user-select: none;
+}
+ 
+.bookx-options-list label:hover {
+  color: #3b82f6; /* Light blue */
+}
+ 
+.bookx-options-list input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  appearance: none;
+  border: 2px solid #bfdbfe; /* Light blue border */
+  border-radius: 4px;
+  background: #ffffff;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+ 
+.bookx-options-list input[type="checkbox"]:checked {
+  background: #3b82f6; /* Light blue */
+  border-color: #3b82f6;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.2l-3.5-3.5a1 1 0 00-1.4 1.4l4.2 4.2a1 1 0 001.4 0l8-8a1 1 0 00-1.4-1.4L9 16.2z'/%3E%3C/svg%3E");
+  background-size: 14px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+ 
+/* 📚 Bookx Content Layout */
+.bookx-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: #ffffff; /* White for contrast */
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+ 
+.bookx-content-heading {
+  font-size: 2.5rem;
+  margin-bottom: 28px;
+  color: #0f172a;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+ 
+/* 📅 Bookx Grid */
+.bookx-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 28px;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
+}
+ 
+/* 📖 Bookx Card */
+.bookx-card {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+ 
+.bookx-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+ 
+.bookx-card-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-bottom: 1px solid #e0e7ff; /* Light blue border */
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+ 
+.bookx-card:hover .bookx-card-image {
+  transform: scale(1.05);
+}
+ 
+/* 📋 Bookx Card Body */
+.bookx-card-body {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+ 
+.bookx-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #0f172a;
+  line-height: 1.3;
+  min-height: 56px;
+}
+ 
+.bookx-card-description {
+  font-size: 1.05rem;
+  color: #475569;
+  flex-grow: 1;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+ 
+.bookx-card-meta {
+  font-size: 0.9rem;
+  color: #475569;
+  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 16px;
+}
+ 
+.bookx-card-meta div {
+  margin-bottom: 6px;
+}
+ 
+/* 🔘 Bookx Card Button */
+.bookx-card-button {
+  padding: 12px 20px;
+  background: #3b82f6; /* Light blue */
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  user-select: none;
+}
+ 
+.bookx-card-button:hover {
+  background: #2563eb; /* Darker blue */
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+  transform: translateY(-2px);
+}
+ 
+/* 📢 Bookx No Books */
+.bookx-no-books {
+  font-size: 1.4rem;
+  color: #64748b;
+  text-align: center;
+  padding: 48px 0;
+  user-select: none;
+}
+ 
+/* 🌑 Bookx Details Overlay */
+.bookx-details-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 41, 59, 0.85); /* Darker slate for depth */
+  z-index: 1200;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+ 
+/* 📄 Bookx Details Container */
+.bookx-details-container {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 40px;
+  max-width: 1100px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in-out;
+  position: relative;
+  display: flex;
+  gap: 32px;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+  align-items: flex-start;
+  border: 1px solid #e0e7ff; /* Light blue border */
+}
+ 
+/* ❌ Bookx Close Button */
+.bookx-close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 24px;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+  user-select: none;
+  z-index: 1100;
+  line-height: 1;
+  padding: 8px;
+}
+ 
+.bookx-close-button:hover {
+  color: #ef4444; /* Red, consistent with deny-btn */
+  transform: scale(1.1);
+}
+ 
+/* 🖼️ Bookx Details Image Wrapper */
+.bookx-details-image-wrapper {
+  flex-shrink: 0;
+  width: 280px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+ 
+.bookx-details-image-wrapper:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+ 
+.bookx-details-image {
+  width: 100%;
+  height: 400px;
+  display: block;
+  object-fit: cover;
+  border-bottom: 1px solid #e0e7ff; /* Light blue border */
+  transition: transform 0.3s ease;
+}
+ 
+.bookx-details-image-wrapper:hover .bookx-details-image {
+  transform: scale(1.05);
+}
+ 
+/* 📋 Bookx Details Table */
+.bookx-details-table {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-sizing: border-box;
+}
+ 
+.bookx-details-table h2 {
+  font-size: 2.25rem;
+  color: #0f172a;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  user-select: none;
+}
+ 
+.bookx-details-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.05rem;
+  color: #475569;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+ 
+.bookx-details-table th,
+.bookx-details-table td {
+  text-align: left;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e0e7ff; /* Light blue border */
+  vertical-align: top;
+}
+ 
+.bookx-details-table th {
+  width: 180px;
+  font-weight: 600;
+  color: #1e293b;
+  background: #fafbff; /* Light blue tint */
+}
+ 
+.bookx-details-table td {
+  color: #1e293b;
+}
+ 
+/* 📜 Bookx Details Description */
+.bookx-details-description {
+  font-size: 1.1rem;
+  color: #475569;
+  line-height: 1.6;
+  margin-top: 12px;
+}
+ 
+/* 🔘 Bookx Details Buttons */
+.bookx-details-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+ 
+.bookx-details-buttons .bookx-card-button {
+  flex: 1;
+  padding: 12px 0;
+  font-weight: 600;
+  text-align: center;
+  min-width: 140px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+ 
+.bookx-details-buttons .bookx-card-button:hover {
+  transform: translateY(-2px);
+}
+ 
+/* ✨ Fade-in Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+ 
+/* 📱 Responsive Adjustments */
+@media (max-width: 1024px) {
+  .bookx-container {
+    padding: 28px 32px;
+  }
+ 
+  .bookx-sidebar {
+    width: 260px;
+  }
+ 
+  .bookx-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+ 
+@media (max-width: 992px) {
+  .bookx-container {
+    flex-direction: column;
+    padding: 24px;
+    align-items: stretch;
+  }
+ 
+  .bookx-sidebar {
+    width: 100%;
+    margin-bottom: 28px;
+  }
+ 
+  .bookx-grid {
+    gap: 20px;
+  }
+ 
+  .bookx-details-container {
+    flex-direction: column;
+    padding: 28px;
+    max-height: 85vh;
+    gap: 20px;
+  }
+ 
+  .bookx-details-image-wrapper {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+ 
+  .bookx-details-image {
+    height: 360px;
+  }
+ 
+  .bookx-details-table table {
+    font-size: 1rem;
+  }
+ 
+  .bookx-details-table th {
+    width: 160px;
+  }
+ 
+  .bookx-card-title {
+    min-height: auto;
+  }
+}
+ 
+@media (max-width: 768px) {
+  .bookx-container {
+    padding: 20px;
+  }
+ 
+  .bookx-sidebar {
+    padding: 24px 20px;
+  }
+ 
+  .bookx-content {
+    padding: 20px;
+  }
+ 
+  .bookx-grid {
+    grid-template-columns: 1fr;
+  }
+ 
+  .bookx-card-button {
+    align-self: stretch;
+  }
+}
+ 
+@media (max-width: 480px) {
+  .bookx-container {
+    padding: 16px;
+  }
+ 
+  .bookx-sidebar {
+    padding: 20px 16px;
+  }
+ 
+  .bookx-content {
+    padding: 16px;
+  }
+ 
+  .bookx-content-heading {
+    font-size: 2rem;
+  }
+ 
+  .bookx-card-title {
+    font-size: 1.3rem;
+  }
+ 
+  .bookx-card-description {
+    font-size: 0.95rem;
+  }
+ 
+  .bookx-details-container {
+    padding: 20px;
+  }
+ 
+  .bookx-details-table h2 {
+    font-size: 1.75rem;
+  }
+ 
+  .bookx-details-table th,
+  .bookx-details-table td {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+ 
+  .bookx-details-table th {
+    width: 140px;
+  }
+ 
+  .bookx-details-buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+ 
+  .bookx-details-buttons .bookx-card-button {
+    min-width: 100%;
+  }
+ 
+  .bookx-details-image-wrapper {
+    max-width: 280px;
+  }
+ 
+  .bookx-details-image {
+    height: 320px;
+  }
+}
+ .bookx-card-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 4; /* Show only 4 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 6em; /* Optional: Limit max height to align with 4 lines depending on line-height */
+  line-height: 1.5em; /* Adjust according to your design */
+}
+ 
