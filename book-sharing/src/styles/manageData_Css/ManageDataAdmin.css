@@ -261,3 +261,20 @@ td {
     align-items: stretch;
   }
 }
+.item-button-with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.inline-delete-icon {
+  cursor: pointer;
+  margin-left: 8px;
+  color: red;
+  background-color: #eef2f7;
+  color: #333;
+  border: none;
+
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.25s;
+}

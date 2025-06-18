@@ -5,10 +5,10 @@ const path = require("path");
 const fs = require("fs");
 module.exports = {
 
- streamBookVersion: async (req, res) => {
+streamBookVersion: async (req, res) => {
   try {
-    const user_id = req.user.user_id;
     const { bookId } = req.params;
+    const { user_id, role } = req.user;
 
     // Get latest version
     const [[version]] = await pool.query(
@@ -20,25 +20,26 @@ module.exports = {
 
     if (!version) return res.status(404).json({ error: "Book not found" });
 
-    // Check access (viewer or higher)
-    const [[access]] = await pool.query(
-      `SELECT permission FROM book_control
-       WHERE user_id = ? AND book_id = ?
-       AND permission IN ('owner', 'editor', 'viewer')`,
-      [user_id, bookId]
-    );
+    // ✅ Only check access if not admin
+    if (role !== 'admin') {
+      const [[access]] = await pool.query(
+        `SELECT permission FROM book_control
+         WHERE user_id = ? AND book_id = ?
+         AND permission IN ('owner', 'editor', 'viewer')`,
+        [user_id, bookId]
+      );
 
-    if (!access) return res.status(403).json({ error: "Access denied" });
+      if (!access) return res.status(403).json({ error: "Access denied" });
+    }
 
     const filePath = path.resolve(__dirname, '..', version.uploaded_link.replace(/^(\.\.[\/\\])+/, '').replace(/^([\/\\])/, ''));
 
-    // Check file exists
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: "File not found" });
     }
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "inline"); // don't force download
+    res.setHeader("Content-Disposition", "inline");
     fs.createReadStream(filePath).pipe(res);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -420,6 +421,7 @@ const [[version]] = await pool.query(
   }
 },
 
+
 downloadBookZip: async (req, res) => {
   try {
     const user_id = req.user.user_id;
@@ -430,8 +432,10 @@ downloadBookZip: async (req, res) => {
       `SELECT zip_link FROM book_versions WHERE book_id = ? AND version_label = ?`,
       [bookId, versionLabel]
     );
-    if (!version || !version.zip_link)
+
+    if (!version || !version.zip_link) {
       return res.status(404).json({ error: 'ZIP file not found for this version' });
+    }
 
     // Step 2: Check download permission
     const [[control]] = await pool.query(
@@ -439,16 +443,31 @@ downloadBookZip: async (req, res) => {
       [user_id, bookId]
     );
 
-    if (!control || control.permission === 'requested')
+    if (!control || control.permission === 'requested') {
       return res.status(403).json({ error: 'Access denied' });
+    }
 
-    if (!control.can_download && req.user.role !== 'admin')
+    if (!control.can_download && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Download permission denied' });
+    }
 
-    // Step 3: Return the zip download link
-    res.json({ download_link: version.zip_link });
+    // Step 3: Stream the ZIP file
+    const filePath = version.zip_link;
+
+    if (!fs.existsSync(filePath)) {
+      console.error("ZIP file not found:", filePath);
+      return res.status(404).json({ error: 'ZIP file missing on server' });
+    }
+
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${path.basename(filePath)}"`
+    );
+    fs.createReadStream(filePath).pipe(res);
 
   } catch (err) {
+    console.error("ZIP Download failed:", err);
     res.status(500).json({ error: err.message });
   }
 },
@@ -526,6 +545,7 @@ downloadBookVersion: async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 },
+
 getUserBookAccess: async (req, res) => {
   try {
     const { user_id } = req.params;
@@ -812,6 +832,54 @@ approveAccessRequest: async (req, res) => {
       console.error('Error updating book:', err);
       res.status(500).json({ error: err.message });
     }
+  },
+
+  updateBookVersion: async (req, res) => {
+  try {
+    const { versionId } = req.params;
+    const { version_label, isbn_code } = req.body;
+
+    const updateFields = [];
+    const values = [];
+
+    if (version_label) {
+      updateFields.push('version_label = ?');
+      values.push(version_label);
+    }
+    if (isbn_code) {
+      updateFields.push('isbn_code = ?');
+      values.push(isbn_code);
+    }
+    if (pdfFile) {
+      updateFields.push('uploaded_link = ?');
+      values.push(pdfFile);
+    }
+    if (zipFile) {
+      updateFields.push('zip_link = ?');
+      values.push(zipFile);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: 'No update fields provided' });
+    }
+
+    values.push(versionId);
+
+    const [result] = await pool.query(
+      `UPDATE book_versions SET ${updateFields.join(', ')} WHERE version_id = ?`,
+      values
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Version not found' });
+    }
+
+    res.json({ success: true, message: 'Book version updated successfully' });
+  } catch (err) {
+    console.error('Error updating book version:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
+}
+
 
 };

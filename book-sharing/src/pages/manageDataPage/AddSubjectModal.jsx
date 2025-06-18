@@ -23,6 +23,7 @@ function AddSubjectModal({ onClose, onSuccess }) {
         }
       );
       onSuccess();
+      onClose();
     } catch (err) {
       setError("Failed to add subject");
     }

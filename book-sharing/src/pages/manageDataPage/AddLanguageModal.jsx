@@ -42,7 +42,8 @@ const handleSubmit = async (e) => {
       },
     });
 
-    onSuccess(); // Refresh the list and close modal
+    onSuccess();
+    onClose();
   } catch (err) {
     console.error("POST error:", err.response?.data || err.message);
     setError("Failed to add language");

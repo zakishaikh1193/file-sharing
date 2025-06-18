@@ -23,6 +23,7 @@ const AddCountryModal = ({ onClose, onSuccess }) => {
         },
       });
       onSuccess();
+      onClose();
     } catch (err) {
       console.error('Error adding country', err);
       setError('Failed to add country');

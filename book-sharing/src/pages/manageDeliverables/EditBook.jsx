@@ -39,7 +39,8 @@ export default function EditBookForm() {
   const [uploadComplete, setUploadComplete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
- 
+ const [isbnError, setIsbnError] = useState('');
+const [versionError, setVersionError] = useState('');
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -65,6 +66,10 @@ export default function EditBookForm() {
         if (!bookData) {
           throw new Error('Book data not found');
         }
+
+        const { data: versionsRes } = await axios.get(`/api/books/${bookId}/versions`, { headers });
+const latestVersion = versionsRes.versions?.[0];
+        console.log("Versions data received:", latestVersion?.isbn_code);
  
         setFormData({
           title: bookData.title || '',
@@ -75,8 +80,8 @@ export default function EditBookForm() {
           standard_id: bookData.standard_id || '',
           country_id: bookData.country_id || '',
           booktype_id: bookData.booktype_id || '',
-          version_label: bookData.version_label || '',
-          isbn_code: bookData.isbn_code || '',
+          version_label: latestVersion?.version_label || '',
+          isbn_code: latestVersion?.isbn_code || '',
           version_file: null,
           cover_file: null,
           resource_file: null,
@@ -100,16 +105,92 @@ export default function EditBookForm() {
  
     fetchData();
   }, [bookId]);
- 
-  const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
- 
-    if (type === 'file') {
-      setFormData(prev => ({ ...prev, [name]: files[0] }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+
+  const formatISBN = (value) => {
+  const digits = value.replace(/\D/g, '');
+  return digits.replace(/(\d{3})(\d{1})(\d{6})(\d{2})(\d{1})?/, (_, a, b, c, d, e) => {
+    if (!e) return `${a}-${b}-${c}-${d}`;
+    return `${a}-${b}-${c}-${d}-${e}`;
+  });
+};
+
+const validateISBN = (isbn) => {
+  const digits = isbn.replace(/\D/g, '');
+  if (digits.length === 0) {
+    setIsbnError('');
+    return true;
+  }
+  if (digits.length !== 13) {
+    setIsbnError('ISBN must be 13 digits');
+    return false;
+  }
+  let sum = 0;
+  for (let i = 0; i < 12; i++) {
+    sum += (i % 2 === 0 ? 1 : 3) * parseInt(digits[i]);
+  }
+  const checkDigit = (10 - (sum % 10)) % 10;
+  if (checkDigit !== parseInt(digits[12])) {
+    setIsbnError('Invalid ISBN check digit');
+    return false;
+  }
+  if (!digits.startsWith('978') && !digits.startsWith('979')) {
+    setIsbnError('ISBN must start with 978 or 979');
+    return false;
+  }
+  setIsbnError('');
+  return true;
+};
+
+const formatVersion = (value) => {
+  const cleaned = value.replace(/[^v0-9.]/gi, '');
+  if (!cleaned.toLowerCase().startsWith('v')) return 'v' + cleaned;
+  return cleaned;
+};
+
+const validateVersion = (version) => {
+  if (!version) {
+    setVersionError('Version label is required');
+    return false;
+  }
+  if (!version.toLowerCase().startsWith('v')) {
+    setVersionError('Version must start with "v"');
+    return false;
+  }
+  const versionRegex = /^v\d+(\.\d+){0,2}$/;
+  if (!versionRegex.test(version)) {
+    setVersionError('Invalid version format. Use format: v1.0 or v1.0.0');
+    return false;
+  }
+  const numbers = version.substring(1).split('.');
+  for (const num of numbers) {
+    if (parseInt(num) > 999) {
+      setVersionError('Version numbers should not exceed 999');
+      return false;
     }
-  };
+  }
+  setVersionError('');
+  return true;
+};
+
+ 
+const handleChange = (e) => {
+  const { name, value, type, files } = e.target;
+
+  if (type === 'file') {
+    setFormData(prev => ({ ...prev, [name]: files[0] }));
+  } else if (name === 'isbn_code') {
+    const formattedISBN = formatISBN(value);
+    setFormData(prev => ({ ...prev, [name]: formattedISBN }));
+    validateISBN(formattedISBN);
+  } else if (name === 'version_label') {
+    const formattedVersion = formatVersion(value);
+    setFormData(prev => ({ ...prev, [name]: formattedVersion }));
+    validateVersion(formattedVersion);
+  } else {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }
+};
+
  
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -170,10 +251,24 @@ export default function EditBookForm() {
         }
  
         try {
-          const versionResponse = await axios.put(`/api/books/book-versions/${bookId}`, versionForm, {
-            headers: { ...config.headers, 'Content-Type': 'multipart/form-data' },
+
+          
+const { data } = await axios.get(`/api/books/${bookId}/versions`, config);
+const latestVersion = data.versions?.[0];
+if (!latestVersion) {
+  console.warn('No versions found — cannot update version file');
+  throw new Error('No version found to update');
+}
+if (!latestVersion) throw new Error('No version found to update');
+
+const versionId = latestVersion.version_id;
+console.log('Updating version with ID:', versionId);
+
+const versionResponse = await axios.put(`/api/books/book-versions/${versionId}`, versionForm, {
+  headers: { ...config.headers, 'Content-Type': 'multipart/form-data' },
             onUploadProgress: (e) => {
               const percent = Math.round((e.loaded * 100) / e.total);
+              console.log(`Version Upload: ${percent}% (${e.loaded}/${e.total})`);
               setUploadProgress(prev => ({ ...prev, version: percent }));
             }
           });
@@ -403,27 +498,31 @@ export default function EditBookForm() {
         </label>
  
         <label>
-          Version Label:
-          <input
-            type="text"
-            name="version_label"
-            value={formData.version_label}
-            placeholder="e.g. v1.0, Revised Edition"
-            onChange={handleChange}
-            required
-          />
-        </label>
+  Version Label:
+  <input
+    type="text"
+    name="version_label"
+    value={formData.version_label}
+    placeholder="e.g. v1.0, Revised Edition"
+    onChange={handleChange}
+    required
+  />
+  {versionError && <span className="error-message">{versionError}</span>}
+</label>
+
  
-        <label>
-          ISBN Code:
-          <input
-            type="text"
-            name="isbn_code"
-            value={formData.isbn_code}
-            placeholder="Enter ISBN Code"
-            onChange={handleChange}
-          />
-        </label>
+<label>
+  ISBN Code:
+  <input
+    type="text"
+    name="isbn_code"
+    value={formData.isbn_code}
+    placeholder="Enter ISBN Code"
+    onChange={handleChange}
+  />
+  {isbnError && <span className="error-message">{isbnError}</span>}
+</label>
+
  
         <label>
           Upload New Version File (PDF):
@@ -472,6 +571,26 @@ export default function EditBookForm() {
       >
         {isSubmitting ? 'Updating...' : 'Update Book'}
       </button>
+
+      {isSubmitting && (
+  <div className="upload-progress-section">
+    <div>
+      Version Upload: {uploadProgress.version}%
+      <progress value={uploadProgress.version} max="100" />
+    </div>
+    <div>
+      Cover Upload: {uploadProgress.cover}%
+      <progress value={uploadProgress.cover} max="100" />
+    </div>
+    {formData.resource_file && (
+      <div>
+        Resource Upload: {uploadProgress.resource}%
+        <progress value={uploadProgress.resource} max="100" />
+      </div>
+    )}
+  </div>
+)}
+
  
       {uploadComplete && (
         <div className="success-message">

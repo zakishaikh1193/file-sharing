@@ -5,6 +5,7 @@ const bookController = require('../controllers/bookController');
 const { upload } = require('../middlewares/uploads');
 const { authenticateAdmin, authenticateUserOrAdmin } = require('../middlewares/auth');
 
+
 // BOOK creation and viewing
 router.post('/', authenticateAdmin, bookController.createBook);
 router.get('/', authenticateUserOrAdmin, bookController.getBooks); 
@@ -19,6 +20,21 @@ router.post(
   ]),
   bookController.uploadBookVersion
 );
+
+router.get('/test-version-update', (req, res) => {
+  res.send('Update route is working');
+});
+
+router.put(
+  '/book-versions/:versionId',
+  authenticateAdmin,
+  upload.fields([
+    { name: 'version_file', maxCount: 1 },
+    { name: 'zip_file', maxCount: 1 },
+  ]),
+  bookController.updateBookVersion
+);
+
 
 router.get(
   '/:bookId/download-zip/:versionLabel',

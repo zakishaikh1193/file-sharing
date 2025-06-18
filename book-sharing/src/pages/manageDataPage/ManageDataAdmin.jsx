@@ -35,12 +35,22 @@ const ManageDataAdmin = () => {
 
   const fetchAll = async () => {
     await Promise.all([
-      axios.get("/api/countries", tokenHeader).then((res) => setCountries(res.data)),
+      axios
+        .get("/api/countries", tokenHeader)
+        .then((res) => setCountries(res.data)),
       axios.get("/api/grades", tokenHeader).then((res) => setGrades(res.data)),
-      axios.get("/api/subjects", tokenHeader).then((res) => setSubjects(res.data)),
-      axios.get("/api/booktypes", tokenHeader).then((res) => setBookTypes(res.data)),
-      axios.get("/api/languages", tokenHeader).then((res) => setLanguages(res.data)),
-      axios.get("/api/standards", tokenHeader).then((res) => setStandards(res.data)),
+      axios
+        .get("/api/subjects", tokenHeader)
+        .then((res) => setSubjects(res.data)),
+      axios
+        .get("/api/booktypes", tokenHeader)
+        .then((res) => setBookTypes(res.data)),
+      axios
+        .get("/api/languages", tokenHeader)
+        .then((res) => setLanguages(res.data)),
+      axios
+        .get("/api/standards", tokenHeader)
+        .then((res) => setStandards(res.data)),
     ]);
   };
 
@@ -51,27 +61,59 @@ const ManageDataAdmin = () => {
   const handleEditOpen = (item, type) => {
     setEditItem(item);
     setEditType(type);
-    setEditValue(
-      type === "country"
-        ? item.country_name
-        : item.grade_level
-    );
+    let value = "";
+    switch (type) {
+      case "country":
+        value = item.country_name;
+        break;
+      case "grade":
+        value = item.grade_level;
+        break;
+      case "subject":
+        value = item.subject_name;
+        break;
+      case "standard":
+        value = item.standard_name;
+        break;
+      case "language":
+        value = item.language_name;
+        break;
+      case "booktype":
+        value = item.book_type_title;
+        break;
+      default:
+        value = "";
+    }
+    setEditValue(value);
     setShowModal((prev) => ({ ...prev, edit: true }));
   };
 
   const handleEditSave = async () => {
+    if (!editItem || !editType || !editValue.trim()) return;
+
     try {
-      const endpoint =
-        editType === "country"
-          ? `/api/countries/${editItem.country_id}`
-          : `/api/grades/${editItem.grade_id}`;
+      const endpoints = {
+        country: `/api/countries/${editItem.country_id}`,
+        grade: `/api/grades/${editItem.grade_id}`,
+        subject: `/api/subjects/${editItem.subject_id}`,
+        standard: `/api/standards/${editItem.standard_id}`,
+        language: `/api/languages/${editItem.language_id}`,
+        booktype: `/api/booktypes/${editItem.book_type_id}`,
+      };
 
-      const payload =
-        editType === "country"
-          ? { country_name: editValue }
-          : { grade_level: editValue };
+      const payloads = {
+        country: { country_name: editValue },
+        grade: { grade_level: editValue },
+        subject: { subject_name: editValue },
+        standard: { standard_name: editValue },
+        language: {
+          language_name: editValue,
+          country_id: editItem.country_id, // ✅ Include existing country_id
+        },
+        booktype: { book_type_title: editValue },
+      };
 
-      await axios.put(endpoint, payload, tokenHeader);
+      await axios.put(endpoints[editType], payloads[editType], tokenHeader);
       setShowModal({});
       setEditItem(null);
       setEditValue("");
@@ -81,13 +123,39 @@ const ManageDataAdmin = () => {
     }
   };
 
-  const renderActions = (item) => (
+  const handleDelete = async (item, type) => {
+    if (!window.confirm(`Are you sure you want to delete this ${type}?`))
+      return;
+
+    try {
+      const endpoints = {
+        country: `/api/countries/${item.country_id}`,
+        grade: `/api/grades/${item.grade_id}`,
+        subject: `/api/subjects/${item.subject_id}`,
+        standard: `/api/standards/${item.standard_id}`,
+        language: `/api/languages/${item.language_id}`,
+        booktype: `/api/booktypes/${item.book_type_id}`,
+      };
+
+      await axios.delete(endpoints[type], tokenHeader);
+      fetchAll();
+    } catch (error) {
+      console.error("Delete failed", error);
+    }
+  };
+
+  const renderActions = (item, type) => (
     <td className="actions-cell">
-      <MdEdit className="action-icon" onClick={() => console.log("Edit:", item)} />
-      <MdDelete className="action-icon" onClick={() => console.log("Delete:", item)} />
+      <MdEdit
+        className="action-icon"
+        onClick={() => handleEditOpen(item, type)}
+      />
+      <MdDelete
+        className="action-icon"
+        onClick={() => handleDelete(item, type)}
+      />
     </td>
   );
-
   return (
     <div className="manage-data-admin-container">
       <h1 className="manage-title">Manage Data</h1>
@@ -95,46 +163,74 @@ const ManageDataAdmin = () => {
       {/* 🌍 Countries and 📘 Grades */}
       <div className="horizontal-button-group">
         <div className="button-group-section">
-          <h2>Countries</h2>
-          <button className="add-data-button" onClick={() => setShowModal({ country: true })}>
-            + Add Country
-          </button>
+          <div className="section-header">
+            <h2>Countries</h2>
+            <button
+              className="add-data-button"
+              onClick={() => setShowModal({ country: true })}
+            >
+              + Add
+            </button>
+          </div>
           <div className="button-list">
             {countries.map((c) => (
-              <button
-                key={c.country_id}
-                className="item-button"
-                onClick={() => handleEditOpen(c, "country")}
-              >
-                {c.country_name}
-              </button>
+              <div key={c.country_id} className="item-button-with-icon">
+                <button
+                  className="item-button"
+                  onClick={() => handleEditOpen(c, "country")}
+                >
+                  {c.country_name}
+                </button>
+              </div>
             ))}
           </div>
+          {showModal.country && (
+            <AddCountryModal
+              onClose={() => setShowModal({})}
+              onSuccess={fetchAll}
+            />
+          )}
         </div>
 
         <div className="button-group-section">
-          <h2>Grades</h2>
-          <button className="add-data-button" onClick={() => setShowModal({ grade: true })}>
-            + Add Grade
-          </button>
+          <div className="section-header">
+            <h2>Grades</h2>
+            <button
+              className="add-data-button"
+              onClick={() => setShowModal({ grade: true })}
+            >
+              + Add
+            </button>
+          </div>
+
           <div className="button-list">
             {grades.map((g) => (
-              <button
-                key={g.grade_id}
-                className="item-button"
-                onClick={() => handleEditOpen(g, "grade")}
-              >
-                {g.grade_level}
-              </button>
+              <div key={g.grade_id} className="item-button-with-icon">
+                <button
+                  className="item-button"
+                  onClick={() => handleEditOpen(g, "grade")}
+                >
+                  {g.grade_level}
+                </button>
+              </div>
             ))}
           </div>
         </div>
+        {showModal.grade && (
+          <AddGradeModal
+            onClose={() => setShowModal({})}
+            onSuccess={fetchAll}
+          />
+        )}
       </div>
 
       {/* 📄 Subjects & Book Types in Horizontal Table Layout */}
       <div className="horizontal-sections-row">
         <section className="data-section half-width">
-          <div className="section-header" onClick={() => toggleCollapse("subject")}>
+          <div
+            className="section-header"
+            onClick={() => toggleCollapse("subject")}
+          >
             <h2>Subjects</h2>
             <button
               onClick={(e) => {
@@ -159,19 +255,25 @@ const ManageDataAdmin = () => {
                   <tr key={item.subject_id}>
                     <td>{item.subject_id}</td>
                     <td>{item.subject_name}</td>
-                    {renderActions(item)}
+                    {renderActions(item, "subject")}
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
           {showModal.subject && (
-            <AddSubjectModal onClose={() => setShowModal({})} onSuccess={fetchAll} />
+            <AddSubjectModal
+              onClose={() => setShowModal({})}
+              onSuccess={fetchAll}
+            />
           )}
         </section>
 
         <section className="data-section half-width">
-          <div className="section-header" onClick={() => toggleCollapse("booktype")}>
+          <div
+            className="section-header"
+            onClick={() => toggleCollapse("booktype")}
+          >
             <h2>Book Types</h2>
             <button
               onClick={(e) => {
@@ -196,14 +298,17 @@ const ManageDataAdmin = () => {
                   <tr key={item.book_type_id}>
                     <td>{item.book_type_id}</td>
                     <td>{item.book_type_title}</td>
-                    {renderActions(item)}
+                    {renderActions(item, "booktype")}
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
           {showModal.booktype && (
-            <AddBookTypeModal onClose={() => setShowModal({})} onSuccess={fetchAll} />
+            <AddBookTypeModal
+              onClose={() => setShowModal({})}
+              onSuccess={fetchAll}
+            />
           )}
         </section>
       </div>
@@ -212,7 +317,7 @@ const ManageDataAdmin = () => {
       {showModal.edit && (
         <div className="edit-modal-overlay">
           <div className="edit-modal-content">
-            <h3>Edit {editType === "country" ? "Country" : "Grade"}</h3>
+            <h3>Edit</h3>
             <input
               type="text"
               value={editValue}
@@ -224,6 +329,17 @@ const ManageDataAdmin = () => {
               <button className="cancel-btn" onClick={() => setShowModal({})}>
                 Cancel
               </button>
+              {editItem && editType && (
+                <button
+                  className="delete-btn"
+                  onClick={() => {
+                    handleDelete(editItem, editType);
+                    setShowModal({});
+                  }}
+                >
+                  Delete
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -238,7 +354,10 @@ const ManageDataAdmin = () => {
             data: standards,
             columns: ["standard_id", "standard_name"],
             modal: (
-              <AddStandardModal onClose={() => setShowModal({})} onSuccess={fetchAll} />
+              <AddStandardModal
+                onClose={() => setShowModal({})}
+                onSuccess={fetchAll}
+              />
             ),
           },
           {
@@ -247,9 +366,13 @@ const ManageDataAdmin = () => {
             data: languages,
             columns: ["language_id", "language_name"],
             extra: (item) =>
-              countries.find((c) => c.country_id === item.country_id)?.country_name || "Unknown",
+              countries.find((c) => c.country_id === item.country_id)
+                ?.country_name || "Unknown",
             modal: (
-              <AddLanguageModal onClose={() => setShowModal({})} onSuccess={fetchAll} />
+              <AddLanguageModal
+                onClose={() => setShowModal({})}
+                onSuccess={fetchAll}
+              />
             ),
           },
         ].map(({ title, key, data, columns, modal, extra }) => (
@@ -283,7 +406,7 @@ const ManageDataAdmin = () => {
                         <td key={i}>{item[col]}</td>
                       ))}
                       {extra && <td>{extra(item)}</td>}
-                      {renderActions(item)}
+                      {renderActions(item, key)}
                     </tr>
                   ))}
                 </tbody>

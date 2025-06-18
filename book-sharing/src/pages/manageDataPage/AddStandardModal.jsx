@@ -24,7 +24,7 @@ const AddStandardModal = ({ onClose, onSuccess }) => {
       });
 
       onSuccess();
-      onClose(); // Close modal after success
+      onClose();
     } catch (err) {
       console.error('Error adding standard', err);
       setError('Failed to add standard');

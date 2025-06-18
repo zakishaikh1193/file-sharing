@@ -21,6 +21,7 @@ const AddGradeModal = ({ onClose, onSuccess }) => {
         },
       });
       onSuccess();
+      onClose();
     } catch (err) {
       console.error('Error adding grade', err);
       setError('Failed to add grade');

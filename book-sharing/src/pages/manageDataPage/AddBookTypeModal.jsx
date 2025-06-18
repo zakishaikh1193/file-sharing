@@ -24,6 +24,7 @@ const handleSubmit = async (e) => {
       }
     );
     onSuccess();
+    onClose();
   } catch {
     setError("Failed to add book type");
   }

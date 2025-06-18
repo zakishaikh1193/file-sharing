@@ -10,7 +10,6 @@ router.post('/', authenticateAdmin, countryController.createCountry);
 router.get('/', authenticateUserOrAdmin, countryController.getAllCountries);
 
 router.put('/:countryId', authenticateAdmin, countryController.updateCountry);
-
 router.delete('/:countryId', authenticateAdmin, countryController.deleteCountry);
 
 module.exports = router;
